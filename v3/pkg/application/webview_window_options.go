@@ -905,6 +905,15 @@ type LinuxWindow struct {
 	// (also known as iconified).
 	Icon []byte
 
+	// LayerShell lets the window place itself on Wayland, where an ordinary
+	// toplevel cannot, by making it a zwlr_layer_shell_v1 surface on the first
+	// SetPosition. Intended for tray popups and panels: a layer surface is off
+	// the taskbar and cannot be dragged by the user.
+	//
+	// Requires gtk4-layer-shell at runtime (libgtk4-layer-shell.so.0), which is
+	// loaded on demand — without it, and on X11, this has no effect.
+	LayerShell bool
+
 	// WindowIsTranslucent sets the window's background to transparent when enabled.
 	WindowIsTranslucent bool
 

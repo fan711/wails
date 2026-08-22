@@ -1340,6 +1340,9 @@ func (w *linuxWebviewWindow) move(x, y int) {
 	// C-side GDK_IS_X11_DISPLAY check handles X11 vs Wayland correctly,
 	// including XWayland and GDK_BACKEND=x11 scenarios.
 	C.window_move_x11(w.gtkWindow(), C.int(x), C.int(y))
+	// A native Wayland toplevel cannot place itself, so there the window is
+	// positioned as a layer surface instead. No-op unless it is one.
+	w.moveLayerShell(x, y)
 }
 
 func (w *linuxWebviewWindow) position() (int, int) {
