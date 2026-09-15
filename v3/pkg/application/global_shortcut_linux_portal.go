@@ -312,6 +312,26 @@ func (w *portalWorker) bindShortcuts() {
 	w.shortcut = newShortcut
 	w.mu.Unlock()
 
+	// Bind only what the portal does not already hold for this app. The
+	// portal persists an app's shortcuts (on KDE in KGlobalAccel) and loads
+	// them into a new session, so an app that binds the same ids on every
+	// start is asking for nothing — and on Plasma 6.3 BindShortcuts opens
+	// System Settings unconditionally, so every launch of such an app popped
+	// the shortcuts page. Later Plasma skips the dialog for known ids itself;
+	// asking first is right on both.
+	if known := w.listShortcuts(); known != nil {
+		missing := false
+		for _, s := range list {
+			if !known[s.ID] {
+				missing = true
+				break
+			}
+		}
+		if !missing {
+			return
+		}
+	}
+
 	resp, err := w.call("BindShortcuts", map[string]dbus.Variant{}, w.sessionPath, list, "")
 	if err != nil {
 		w.p.manager.app.handleError(fmt.Errorf("global shortcuts: BindShortcuts failed: %w", err))
@@ -321,6 +341,43 @@ func (w *portalWorker) bindShortcuts() {
 		// response 1 = user cancelled the portal dialog, 2 = ended.
 		w.p.manager.app.handleError(fmt.Errorf("global shortcuts: portal did not grant shortcuts (response %d); they will not fire", resp.code))
 	}
+}
+
+// listShortcuts is the set of shortcut ids the portal already holds for this
+// session's app, or nil when it could not be asked — in which case the caller
+// binds as it always did.
+func (w *portalWorker) listShortcuts() map[string]bool {
+	resp, err := w.call("ListShortcuts", map[string]dbus.Variant{}, w.sessionPath)
+	if err != nil || resp.code != 0 {
+		return nil
+	}
+	v, ok := resp.results["shortcuts"]
+	if !ok {
+		return nil
+	}
+	known := map[string]bool{}
+	// a(sa{sv}): godbus decodes each element as []interface{}{id, props}.
+	if entries, ok := v.Value().([][]interface{}); ok {
+		for _, e := range entries {
+			if len(e) > 0 {
+				if id, ok := e[0].(string); ok {
+					known[id] = true
+				}
+			}
+		}
+		return known
+	}
+	if entries, ok := v.Value().([]interface{}); ok {
+		for _, e := range entries {
+			if pair, ok := e.([]interface{}); ok && len(pair) > 0 {
+				if id, ok := pair[0].(string); ok {
+					known[id] = true
+				}
+			}
+		}
+		return known
+	}
+	return nil
 }
 
 func (w *portalWorker) handleSignal(sig *dbus.Signal) {
