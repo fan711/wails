@@ -1,4 +1,4 @@
-//go:build linux && layershell && !gtk3 && !server
+//go:build linux && !android && layershell && !gtk3 && !server
 
 package application
 
