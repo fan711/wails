@@ -29,6 +29,9 @@ var (
 				{Name: "delta", Type: "i", Direction: "in"},
 				{Name: "orientation", Type: "s", Direction: "in"},
 			}},
+			{Name: "ProvideXdgActivationToken", Args: []introspect.Arg{
+				{Name: "token", Type: "s", Direction: "in"},
+			}},
 		},
 		Signals: []introspect.Signal{{Name: "NewTitle"},
 			{Name: "NewIcon"},
@@ -184,15 +187,18 @@ type StatusNotifierItemer interface {
 	SecondaryActivate(x int32, y int32) (err *dbus.Error)
 	// Scroll is org.kde.StatusNotifierItem.Scroll method.
 	Scroll(delta int32, orientation string) (err *dbus.Error)
+	// ProvideXdgActivationToken is org.kde.StatusNotifierItem.ProvideXdgActivationToken method.
+	ProvideXdgActivationToken(token string) (err *dbus.Error)
 }
 
 // ExportStatusNotifierItem exports the given object that implements org.kde.StatusNotifierItem on the bus.
 func ExportStatusNotifierItem(conn *dbus.Conn, path dbus.ObjectPath, v StatusNotifierItemer) error {
 	return conn.ExportSubtreeMethodTable(map[string]interface{}{
-		"ContextMenu":       v.ContextMenu,
-		"Activate":          v.Activate,
-		"SecondaryActivate": v.SecondaryActivate,
-		"Scroll":            v.Scroll,
+		"ContextMenu":               v.ContextMenu,
+		"Activate":                  v.Activate,
+		"SecondaryActivate":         v.SecondaryActivate,
+		"Scroll":                    v.Scroll,
+		"ProvideXdgActivationToken": v.ProvideXdgActivationToken,
 	}, path, InterfaceStatusNotifierItem)
 }
 

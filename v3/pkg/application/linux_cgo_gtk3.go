@@ -2577,3 +2577,7 @@ func (w *linuxWebviewWindow) redo() {
 
 func (w *linuxWebviewWindow) delete() {
 }
+
+// setActivationToken: the GTK3 build does not carry the token through;
+// the request is made without one, as it always was.
+func setActivationToken(string) {}
