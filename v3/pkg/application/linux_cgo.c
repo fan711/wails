@@ -2,6 +2,10 @@
 
 #include "linux_cgo.h"
 
+#ifdef GDK_WINDOWING_WAYLAND
+#include <gdk/wayland/gdkwayland.h>
+#endif
+
 #ifdef GDK_WINDOWING_X11
 #include <gdk/x11/gdkx.h>
 #include <X11/Xatom.h>
@@ -1220,4 +1224,20 @@ void window_set_max_size(GtkWindow *window, int maxWidth, int maxHeight) {
 
 int GetNumScreens(void) {
     return 0;
+}
+
+// ============================================================================
+// Activation
+// ============================================================================
+
+void set_activation_token(const char *token) {
+#ifdef GDK_WINDOWING_WAYLAND
+    GdkDisplay *display = gdk_display_get_default();
+    if (display == NULL || token == NULL || !GDK_IS_WAYLAND_DISPLAY(display)) return;
+    // GDK spends this on the next gdk_toplevel_focus / map of a toplevel,
+    // which is what gtk_window_present does.
+    gdk_wayland_display_set_startup_notification_id(display, token);
+#else
+    (void)token;
+#endif
 }

@@ -2280,3 +2280,11 @@ func enableDevTools(wv pointer) {
 var _ = time.Now
 var _ = events.Linux
 var _ = strings.TrimSpace
+
+// setActivationToken hands the toolkit an xdg-activation token for the next
+// window it presents (see set_activation_token). Main thread.
+func setActivationToken(token string) {
+	cToken := C.CString(token)
+	defer C.free(unsafe.Pointer(cToken))
+	C.set_activation_token(cToken)
+}

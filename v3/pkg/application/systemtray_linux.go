@@ -52,6 +52,12 @@ type linuxSystemTray struct {
 
 	lastClickX int
 	lastClickY int
+
+	// activationToken is what the host handed over through
+	// ProvideXdgActivationToken for the Activate about to come; empty
+	// otherwise, and emptied again once used.
+	tokenLock       sync.Mutex
+	activationToken string
 }
 
 func (s *linuxSystemTray) getScreen() (*Screen, error) {
@@ -862,9 +868,30 @@ func (s *linuxSystemTray) Activate(x int32, y int32) (err *dbus.Error) {
 	s.lastClickX = int(x)
 	s.lastClickY = int(y)
 	globalApplication.debug("systray Activate called", "x", x, "y", y)
+	// The token the host handed over just before this click, if any, goes to
+	// the toolkit now, so that the window the handler presents is one the
+	// compositor will activate (and un-minimise) rather than refuse as focus
+	// stealing. Consumed here: a token is for one activation.
+	s.tokenLock.Lock()
+	token := s.activationToken
+	s.activationToken = ""
+	s.tokenLock.Unlock()
+	if token != "" {
+		InvokeSync(func() { setActivationToken(token) })
+	}
 	if s.parent.clickHandler != nil {
 		s.parent.clickHandler()
 	}
+	return
+}
+
+// ProvideXdgActivationToken is the host telling the item, right before an
+// Activate, what token the compositor will honour for it. Plasma's system tray
+// sends one on Wayland; a host that does not simply never calls this.
+func (s *linuxSystemTray) ProvideXdgActivationToken(token string) (err *dbus.Error) {
+	s.tokenLock.Lock()
+	s.activationToken = token
+	s.tokenLock.Unlock()
 	return
 }
 

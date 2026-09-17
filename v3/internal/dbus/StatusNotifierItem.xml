@@ -54,6 +54,13 @@
 <arg name="delta" type="i" direction="in"/>
 <arg name="orientation" type="s" direction="in"/>
 </method>
+<!--  Wayland: the host hands the item an xdg-activation token right before
+      Activate, so that a window the item raises can be activated (and
+      un-minimised) by the compositor — a request without one is refused as
+      focus stealing. Plasma's tray does this; KStatusNotifierItem accepts it. -->
+<method name="ProvideXdgActivationToken">
+<arg name="token" type="s" direction="in"/>
+</method>
 <!--  Signals: the client wants to change something in the status -->
 <signal name="NewTitle"> </signal>
 <signal name="NewIcon"> </signal>
