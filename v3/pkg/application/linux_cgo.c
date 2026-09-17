@@ -1241,3 +1241,13 @@ void set_activation_token(const char *token) {
     (void)token;
 #endif
 }
+
+int has_activation_token(void) {
+#ifdef GDK_WINDOWING_WAYLAND
+    GdkDisplay *display = gdk_display_get_default();
+    if (display == NULL || !GDK_IS_WAYLAND_DISPLAY(display)) return 0;
+    return gdk_wayland_display_get_startup_notification_id(display) != NULL;
+#else
+    return 0;
+#endif
+}

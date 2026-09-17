@@ -220,4 +220,10 @@ int GetNumScreens(void);
 // treats one without as focus stealing.
 void set_activation_token(const char *token);
 
+// Whether a token set above is still unspent — GDK spends it on the next
+// present or map of a toplevel. Lets a click handler decide how to raise a
+// window: a present with a token in hand is honoured by the compositor, one
+// without is refused as focus stealing.
+int has_activation_token(void);
+
 #endif // LINUX_CGO_H
