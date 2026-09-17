@@ -210,4 +210,14 @@ void window_set_max_size(GtkWindow *window, int maxWidth, int maxHeight);
 
 int GetNumScreens(void);
 
+// ============================================================================
+// Activation
+// ============================================================================
+
+// Hand GDK an xdg-activation token for the next present/focus of a toplevel
+// (Wayland only; a no-op elsewhere). The compositor honours a request that
+// carries a token it issued — a tray host passes one before Activate — and
+// treats one without as focus stealing.
+void set_activation_token(const char *token);
+
 #endif // LINUX_CGO_H
