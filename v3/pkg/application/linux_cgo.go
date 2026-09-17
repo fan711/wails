@@ -2288,3 +2288,11 @@ func setActivationToken(token string) {
 	defer C.free(unsafe.Pointer(cToken))
 	C.set_activation_token(cToken)
 }
+
+// HasPendingActivationToken reports whether an activation token — one a tray
+// host handed over before a click (ProvideXdgActivationToken) — is waiting
+// to be spent on the next window presented or mapped. Main thread. Wayland
+// only; false elsewhere.
+func HasPendingActivationToken() bool {
+	return C.has_activation_token() != 0
+}
