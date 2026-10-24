@@ -5,7 +5,9 @@
 #import <LocalAuthentication/LocalAuthentication.h>
 #import <UserNotifications/UserNotifications.h>
 #import <Security/Security.h>
+#ifndef WAILS_NO_LOCATION
 #import <CoreLocation/CoreLocation.h>
+#endif
 #import <CoreMotion/CoreMotion.h>
 #import <SystemConfiguration/SystemConfiguration.h>
 #import <netinet/in.h>
@@ -529,6 +531,9 @@ void ios_haptic(const char* ctype) {
 
 // MARK: - Geolocation
 
+// Left out under -tags wails_nolocation (mobile_features_ios_nolocation.go).
+#ifndef WAILS_NO_LOCATION
+
 @interface MFLocationDelegate : NSObject <CLLocationManagerDelegate>
 @end
 @implementation MFLocationDelegate
@@ -584,6 +589,14 @@ void ios_get_location(void) {
         }
     });
 }
+
+#else
+
+void ios_get_location(void) {
+    mfEmit(@"common:location", @{@"error": @"location is not available in this build"});
+}
+
+#endif
 
 // MARK: - Accelerometer / device motion
 

@@ -4,7 +4,7 @@ package application
 
 /*
 #cgo CFLAGS: -x objective-c -fmodules -fobjc-arc
-#cgo LDFLAGS: -framework UIKit -framework LocalAuthentication -framework UserNotifications -framework AVFoundation -framework Security -framework CoreLocation -framework CoreMotion -framework SystemConfiguration
+#cgo LDFLAGS: -framework UIKit -framework LocalAuthentication -framework UserNotifications -framework AVFoundation -framework Security -framework CoreMotion -framework SystemConfiguration
 #include <stdlib.h>
 #include "mobile_features_ios.h"
 */

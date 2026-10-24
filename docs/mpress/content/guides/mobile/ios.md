@@ -134,6 +134,10 @@ Events.On("common:notification", (e) => { /* {ok, scheduled, presented, tapped, 
 
 The kitchen-sink example under `v3/examples/mobile` wires every feature above end to end.
 
+### Building without geolocation
+
+Geolocation links CoreLocation, and App Store Connect flags any binary that references it without an `NSLocationWhenInUseUsageDescription` purpose string in `Info.plist` (ITMS-90683), even if the app never calls `GetLocation()`. An app that does not use location can build with `-tags wails_nolocation`: the CoreLocation code is compiled out and the framework is not linked, so no purpose string is needed. `GetLocation()` then answers every request with a `common:location` `{error}` event. If your Xcode project links `-framework CoreLocation` itself, remove it there too.
+
 ## WebView controls
 
 A few WebView behaviours can also be changed at runtime from Go:
