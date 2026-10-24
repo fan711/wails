@@ -435,28 +435,30 @@ static NSMutableArray<NSString *> *pendingConsoleJS;
 // MARK: - C bridges used by Go
 unsigned int ios_create_webview(void) {
     __block unsigned int windowID = nextWindowID++;
-    if (!appDelegate || !appDelegate.window) {
+    if (!appDelegate) {
         return windowID;
     }
     dispatch_async(dispatch_get_main_queue(), ^{
         WailsViewController *vc = [[WailsViewController alloc] initWithWindowID:windowID];
         if (!appDelegate.viewControllers) appDelegate.viewControllers = [NSMutableArray array];
         [appDelegate.viewControllers addObject:vc];
-        appDelegate.window.rootViewController = vc;
+        if (appDelegate.window) appDelegate.window.rootViewController = vc;
         [vc loadViewIfNeeded];
     });
     return windowID;
 }
 void* ios_create_webview_with_id(unsigned int wailsID) {
     __block WailsViewController *viewController = nil;
-    if (!appDelegate || !appDelegate.window) {
+    // No window yet is fine: the scene has not connected, and the scene
+    // delegate makes the first view controller the root when it does.
+    if (!appDelegate) {
         return NULL;
     }
     void (^createBlock)(void) = ^{
         viewController = [[WailsViewController alloc] initWithWindowID:wailsID];
         if (!appDelegate.viewControllers) appDelegate.viewControllers = [NSMutableArray array];
         [appDelegate.viewControllers addObject:viewController];
-        if (appDelegate.viewControllers.count == 1) {
+        if (appDelegate.viewControllers.count == 1 && appDelegate.window) {
             appDelegate.window.rootViewController = viewController;
         }
         // Trigger the view to load exactly once, the UIKit-correct way. Calling

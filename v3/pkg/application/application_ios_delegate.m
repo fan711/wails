@@ -16,34 +16,10 @@ extern void ios_notifications_init(void);
 
 @implementation WailsAppDelegate
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
-    // Set global appDelegate reference and bring up a window if needed
+    // Set the global appDelegate reference. The window is not made here: under
+    // the scene life cycle it belongs to a UIWindowScene, which UIKit connects
+    // after this returns (WailsSceneDelegate, application_ios_scene_delegate.m).
     appDelegate = self;
-    if (self.window == nil) {
-        // Start the window with the launch-screen colour (a "LaunchBackground"
-        // colour asset, also referenced by UILaunchScreen) so there's no white
-        // flash between the launch screen and the first WebView paint. The Go
-        // options set the colour too, but that happens after this delegate runs,
-        // so it can't colour the initial window. Falls back to white if the
-        // asset isn't present.
-        UIColor *launchBG = [UIColor colorNamed:@"LaunchBackground"] ?: [UIColor whiteColor];
-        self.window = [[UIWindow alloc] initWithFrame:[[UIScreen mainScreen] bounds]];
-        self.window.backgroundColor = launchBG;
-        UIViewController *rootVC = [[UIViewController alloc] init];
-        rootVC.view.backgroundColor = launchBG;
-        self.window.rootViewController = rootVC;
-        [self.window makeKeyAndVisible];
-    }
-    // Apply app-wide background colour if configured
-    unsigned char r = 255, g = 255, b = 255, a = 255;
-    if (ios_get_app_background_color(&r, &g, &b, &a)) {
-        CGFloat fr = ((CGFloat)r) / 255.0;
-        CGFloat fg = ((CGFloat)g) / 255.0;
-        CGFloat fb = ((CGFloat)b) / 255.0;
-        CGFloat fa = ((CGFloat)a) / 255.0;
-        UIColor *color = [UIColor colorWithRed:fr green:fg blue:fb alpha:fa];
-        self.window.backgroundColor = color;
-        self.window.rootViewController.view.backgroundColor = color;
-    }
     if (!self.viewControllers) {
         self.viewControllers = [NSMutableArray array];
     }
@@ -55,13 +31,15 @@ extern void ios_notifications_init(void);
     // this and emits ApplicationDidFinishLaunching from the Go side once the
     // event listeners are wired up - emitting it from here would race the Go
     // runtime's startup and the event could be dropped.
-    // Start the Go runtime NOW — only after UIKit has delivered the launch and
-    // the window exists. Starting Go earlier (concurrently with UIApplicationMain)
+    // Start the Go runtime NOW — only after UIKit has delivered the launch.
+    // The window may not exist yet (the scene connects later, and not at all on
+    // a background launch); a WebView created before it is attached when it
+    // arrives (WailsSceneDelegate). Starting Go earlier (concurrently with UIApplicationMain)
     // intermittently corrupts the FrontBoard launch handshake on a physical
     // device, so this method never fires (blank cold launch / 0x8BADF00D). Run it
     // on a background thread so app.Run()'s blocking loop never touches the main
     // thread. WailsIOSMain -> user main() -> app.Run(); the window's run() then
-    // creates the WebView (appDelegate/window are already set above).
+    // creates the WebView.
     dispatch_async(dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^{
         WailsIOSMain();
     });
